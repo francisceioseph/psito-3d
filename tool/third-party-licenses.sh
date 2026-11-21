@@ -7,4 +7,5 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 OUT="${1:?usage: tool/third-party-licenses.sh <output file>}"
+mkdir -p "$(dirname "$OUT")"
 cargo about generate --workspace --fail -o "$OUT" about.hbs

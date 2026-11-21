@@ -64,6 +64,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      # A tag that already pointed here (made by hand, say) is not a new release.
+      - name: The tags before
+        id: before
+        run: echo "tags=$(git tag --points-at HEAD 'v*' | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
       - name: Tag and publish the release
         run: >-
           npx --yes
@@ -75,8 +79,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: The tag, if this run made one
         id: new_tag
+        env:
+          BEFORE: ${{ steps.before.outputs.tags }}
         run: |
-          tag="$(git tag --points-at HEAD 'v*' | head -1)"
+          tag=""
+          for t in $(git tag --points-at HEAD 'v*'); do
+            case " $BEFORE " in *" $t "*) ;; *) tag="$t" ;; esac
+          done
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
   packages:
