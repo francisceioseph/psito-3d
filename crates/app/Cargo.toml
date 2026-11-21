@@ -1,0 +1,40 @@
+[package]
+name = "psito-3d"
+description = "Psito 3D: make landscapes like the 90s, with plugins in Lua."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+default-run = "psito-3d"
+
+[lib]
+name = "psito3d_app"
+path = "src/lib.rs"
+
+[[bin]]
+name = "psito-3d"
+path = "src/main.rs"
+
+[dependencies]
+psito3d-plugins.workspace = true
+psito3d-render.workspace = true
+psito3d-scene.workspace = true
+psito3d-terrain.workspace = true
+psito3d-ui.workspace = true
+eframe.workspace = true
+egui.workspace = true
+env_logger.workspace = true
+image.workspace = true
+log.workspace = true
+rfd.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sys-locale.workspace = true
+wgpu.workspace = true
+
+[dev-dependencies]
+egui_kittest = { workspace = true, features = ["wgpu", "eframe"] }
+tempfile.workspace = true
+
+[lints]
+workspace = true

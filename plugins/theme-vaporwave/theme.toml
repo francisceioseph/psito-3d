@@ -1,0 +1,30 @@
+# A theme pack that ships as a plugin: it changes the colours and also the
+# shape of the components (pill buttons, line sliders).
+id = "org.psito.vaporwave"
+name = { en = "Vaporwave", pt = "Vaporwave" }
+dark = true
+
+[colors]
+background = "#1a0b2e"
+panel = "#24103f"
+raised = "#3a1a63"
+sunken = "#12061f"
+text = "#fbe9ff"
+text_muted = "#c69ad9"
+accent = "#ff4fd8"
+accent_text = "#1a0b2e"
+line = "#5b2a8a"
+bevel_light = "#00f0ff40"
+bevel_dark = "#00000080"
+danger = "#ff6b8b"
+
+[metrics]
+radius = 12.0
+bevel = 0.0
+stroke = 1.5
+spacing = 9.0
+control_height = 28.0
+
+[components]
+button = "pill"
+slider = "line"

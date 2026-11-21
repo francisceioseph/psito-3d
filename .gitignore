@@ -1,0 +1,6 @@
+/target/
+*.swp
+.DS_Store
+.idea/
+**/tests/snapshots/*.diff.png
+**/tests/snapshots/*.new.png

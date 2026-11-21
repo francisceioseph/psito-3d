@@ -1,0 +1,7 @@
+id = "org.psito.theme-vaporwave"
+name = { en = "Vaporwave", pt = "Vaporwave" }
+description = { en = "Magenta and cyan, with pill buttons.", pt = "Magenta e ciano, com botões arredondados." }
+version = "1.0.0"
+author = "Psito 3D"
+api = 1
+theme = "theme.toml"

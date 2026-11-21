@@ -1,0 +1,3 @@
+# The host shares its memory with a VM: keep the parallel jobs low.
+[build]
+jobs = 4

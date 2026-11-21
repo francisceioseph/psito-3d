@@ -1,0 +1,35 @@
+# The default theme: the blue hour after a Bryce sunset, with an orange sun
+# for the accent. See docs/THEMES.md for every key.
+id = "psito.dusk"
+name = { en = "Dusk", pt = "Entardecer" }
+dark = true
+
+[colors]
+background = "#14172a"
+panel = "#1e2238"
+raised = "#2c3150"
+sunken = "#121527"
+text = "#eceef7"
+text_muted = "#9aa1c2"
+accent = "#ff8a4c"
+accent_text = "#1a1205"
+line = "#383e62"
+bevel_light = "#ffffff26"
+bevel_dark = "#00000080"
+danger = "#ff6b6b"
+
+[metrics]
+radius = 6.0
+bevel = 1.5
+stroke = 1.0
+spacing = 8.0
+control_height = 26.0
+
+[type]
+body = 14.0
+heading = 15.0
+small = 12.0
+
+[components]
+button = "bevel"
+slider = "groove"

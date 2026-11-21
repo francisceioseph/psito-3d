@@ -1,0 +1,16 @@
+[package]
+name = "psito3d-scene"
+description = "The scene model of Psito 3D: terrain, sky, sea, objects, camera and the undo history."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+glam.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true

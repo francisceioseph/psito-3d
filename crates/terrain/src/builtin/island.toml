@@ -1,0 +1,35 @@
+id = "psito.island"
+name = { en = "Island", pt = "Ilha" }
+description = { en = "One island in the middle of the sea.", pt = "Uma ilha no meio do mar." }
+
+[[params]]
+id = "size"
+label = { en = "Size", pt = "Tamanho" }
+kind = "slider"
+min = 0.3
+max = 1.0
+default = 0.7
+
+[[params]]
+id = "roughness"
+label = { en = "Roughness", pt = "Aspereza" }
+kind = "slider"
+min = 0.3
+max = 0.7
+default = 0.5
+
+[[params]]
+id = "peaks"
+label = { en = "Peaks", pt = "Picos" }
+kind = "slider"
+min = 0.0
+max = 1.0
+default = 0.5
+
+[[params]]
+id = "height"
+label = { en = "Height", pt = "Altura" }
+kind = "slider"
+min = 0.1
+max = 1.0
+default = 0.8

@@ -1,0 +1,24 @@
+[package]
+name = "psito3d-render"
+description = "The wgpu renderer of Psito 3D: progressive ray marching of terrain, sea, sky and objects."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+psito3d-scene.workspace = true
+psito3d-terrain.workspace = true
+bytemuck.workspace = true
+glam.workspace = true
+log.workspace = true
+pollster.workspace = true
+thiserror.workspace = true
+wgpu.workspace = true
+
+[dev-dependencies]
+image.workspace = true
+naga.workspace = true
+
+[lints]
+workspace = true

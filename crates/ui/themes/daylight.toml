@@ -1,0 +1,29 @@
+# A light theme: a clear sky over chalk-white panels, with a sea-teal accent.
+id = "psito.daylight"
+name = { en = "Daylight", pt = "Dia claro" }
+dark = false
+
+[colors]
+background = "#dfe6ef"
+panel = "#f3f5f9"
+raised = "#ffffff"
+sunken = "#d5dce7"
+text = "#1b2238"
+text_muted = "#5a6382"
+accent = "#1d7385"
+accent_text = "#ffffff"
+line = "#c3cbda"
+bevel_light = "#ffffffcc"
+bevel_dark = "#1b223833"
+danger = "#c0392b"
+
+[metrics]
+radius = 6.0
+bevel = 1.0
+stroke = 1.0
+spacing = 8.0
+control_height = 26.0
+
+[components]
+button = "bevel"
+slider = "groove"

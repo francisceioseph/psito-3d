@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=Psito 3D
+GenericName=Landscape renderer
+GenericName[pt]=Gerador de paisagens
+Comment=Make landscapes of mountains, sea, sky and chrome balls
+Comment[pt]=Crie paisagens de montanhas, mar, céu e esferas cromadas
+Exec=psito-3d
+Icon=org.psito.psito3d
+Terminal=false
+Categories=Graphics;3DGraphics;
+Keywords=3d;landscape;terrain;render;bryce;paisagem;terreno;
+StartupWMClass=org.psito.psito3d

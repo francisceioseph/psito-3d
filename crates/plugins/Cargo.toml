@@ -1,0 +1,22 @@
+[package]
+name = "psito3d-plugins"
+description = "The Lua plugin host of Psito 3D, with its sandbox."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+psito3d-scene.workspace = true
+psito3d-terrain.workspace = true
+log.workspace = true
+mlua.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+toml.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+
+[lints]
+workspace = true

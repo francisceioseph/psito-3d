@@ -1,0 +1,24 @@
+[package]
+name = "psito3d-ui"
+description = "The UI kit of Psito 3D: design tokens, theme packs and widgets in atomic design."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+psito3d-scene.workspace = true
+egui.workspace = true
+fluent-bundle.workspace = true
+fluent-syntax = "0.12"
+log.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+toml.workspace = true
+unic-langid.workspace = true
+
+[dev-dependencies]
+egui_kittest.workspace = true
+
+[lints]
+workspace = true

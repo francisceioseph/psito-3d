@@ -1,0 +1,55 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+license = "Apache-2.0"
+repository = "https://github.com/francisceioseph/psito-3d"
+
+[workspace.dependencies]
+psito3d-scene = { path = "crates/scene" }
+psito3d-terrain = { path = "crates/terrain" }
+psito3d-plugins = { path = "crates/plugins" }
+psito3d-render = { path = "crates/render" }
+psito3d-ui = { path = "crates/ui" }
+
+anyhow = "1"
+bytemuck = { version = "1", features = ["derive"] }
+eframe = { version = "0.37", default-features = false, features = ["accesskit", "default_fonts", "wayland", "x11", "wgpu"] }
+egui = { version = "0.37", features = ["default_fonts"] }
+egui_kittest = { version = "0.37" }
+fluent-bundle = "0.16"
+glam = { version = "0.34", features = ["serde", "bytemuck"] }
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "bmp", "webp", "gif"] }
+log = "0.4"
+env_logger = "0.11"
+mlua = { version = "0.12", features = ["lua54", "vendored"] }
+naga = { version = "30", features = ["wgsl-in"] }
+pollster = "1"
+rfd = "0.18"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sys-locale = "0.3"
+tempfile = "3"
+thiserror = "2"
+toml = "1"
+unic-langid = { version = "0.9", features = ["macros"] }
+wgpu = "30"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+
+# Dependencies are optimised even in debug builds: terrain generation and the
+# Lua host are far too slow otherwise.
+[profile.dev.package."*"]
+opt-level = 2
+
+[profile.release]
+lto = "thin"

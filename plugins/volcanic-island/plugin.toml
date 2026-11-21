@@ -1,0 +1,31 @@
+id = "org.psito.volcanic-island"
+name = { en = "Volcanic island", pt = "Ilha vulcânica" }
+description = { en = "A cone of rock with a crater, rising from the sea.", pt = "Um cone de pedra com cratera, saindo do mar." }
+version = "1.0.0"
+author = "Psito 3D"
+api = 1
+
+[terrain]
+script = "terrain.lua"
+
+[[terrain.params]]
+id = "height"
+label = { en = "Height", pt = "Altura" }
+kind = "slider"
+min = 0.2
+max = 1.0
+default = 0.85
+
+[[terrain.params]]
+id = "crater"
+label = { en = "Crater", pt = "Cratera" }
+kind = "slider"
+min = 0.0
+max = 0.4
+default = 0.12
+
+[[terrain.params]]
+id = "gullies"
+label = { en = "Gullies", pt = "Ravinas" }
+kind = "toggle"
+default = true
