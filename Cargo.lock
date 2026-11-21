@@ -2671,7 +2671,7 @@ checksum = "3d595e54a326bc53c1c197b32d295e14b169e3cfeaa8dc82b529f947fba6bcf5"
 
 [[package]]
 name = "psito-3d"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "eframe",
  "egui",
@@ -2695,7 +2695,7 @@ dependencies = [
 
 [[package]]
 name = "psito3d-plugins"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "log",
  "mlua",
@@ -2709,7 +2709,7 @@ dependencies = [
 
 [[package]]
 name = "psito3d-render"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "bytemuck",
  "glam",
@@ -2725,7 +2725,7 @@ dependencies = [
 
 [[package]]
 name = "psito3d-scene"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "base64",
  "glam",
@@ -2737,7 +2737,7 @@ dependencies = [
 
 [[package]]
 name = "psito3d-terrain"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "image",
  "psito3d-scene",
@@ -2749,7 +2749,7 @@ dependencies = [
 
 [[package]]
 name = "psito3d-ui"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "egui",
  "egui_kittest",
