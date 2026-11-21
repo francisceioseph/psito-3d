@@ -25,6 +25,8 @@ interface.
   a clean image that sharpens sample by sample
 - **Finishing filters**: 256 colours with dithering, or a tube screen
 - **Undo and redo**, scenes saved as `.psito3d`, pictures saved as PNG
+- **Use as wallpaper**, rendered at the size of your screen, on GNOME,
+  Cinnamon, MATE, KDE Plasma, Xfce, Windows and macOS
 - **Themes** that restyle every control, built in or from plugins
 - In English and Portuguese
 

@@ -1,6 +1,8 @@
 //! The eframe application: wires the editor state, the page, the terrain
 //! worker, the renderer and the files together.
 
+use std::path::PathBuf;
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use eframe::egui_wgpu::RenderState;
@@ -14,13 +16,14 @@ use psito3d_ui::theme;
 
 use crate::catalog::Catalog;
 use crate::editor::EditorState;
-use crate::export::ExportJob;
+use crate::export::{ExportJob, Outcome, PictureSettings, Purpose};
 use crate::gpu_viewport::GpuViewport;
 use crate::pages::EditorPage;
 use crate::paths;
 use crate::prefs::Prefs;
 use crate::surprise::surprise;
 use crate::terrain_worker::TerrainWorker;
+use crate::wallpaper::{SystemWallpaper, WallpaperError, WallpaperSetter, new_wallpaper_path, prune_wallpapers};
 
 /// How long after the last change the renderer switches from the quick
 /// preview to the clean image.
@@ -29,22 +32,39 @@ const SETTLE_TIME: Duration = Duration::from_millis(220);
 const DRAG_RESOLUTION: u32 = 192;
 /// How long a passing message stays in the status bar.
 const MESSAGE_TIME: Duration = Duration::from_secs(4);
+/// How long a message the person may need to act on stays.
+const LONG_MESSAGE_TIME: Duration = Duration::from_secs(12);
+/// How many of the wallpapers made are kept on disk.
+const WALLPAPERS_KEPT: usize = 3;
 
 /// Where the app looks for things; the defaults are the real places, and
 /// tests point them at temporary folders.
 #[derive(Debug, Clone)]
 pub struct AppOptions {
     /// The preferences file; `None` keeps nothing between runs.
-    pub prefs_path: Option<std::path::PathBuf>,
+    pub prefs_path: Option<PathBuf>,
     /// The folders plugins are looked for in.
-    pub plugin_dirs: Vec<std::path::PathBuf>,
+    pub plugin_dirs: Vec<PathBuf>,
+    /// The program's data folder, where wallpapers are kept.
+    pub data_dir: Option<PathBuf>,
     /// The seed of "Surprise me" and of rolled seeds; `None` uses the clock.
     pub seed: Option<u64>,
+    /// What puts a picture on the desktop.
+    pub wallpaper: Arc<dyn WallpaperSetter>,
+    /// Size and quality of a wallpaper when the screen size is unknown.
+    pub wallpaper_picture: PictureSettings,
 }
 
 impl Default for AppOptions {
     fn default() -> Self {
-        Self { prefs_path: Prefs::path(), plugin_dirs: paths::plugin_dirs(), seed: None }
+        Self {
+            prefs_path: Prefs::path(),
+            plugin_dirs: paths::plugin_dirs(),
+            data_dir: paths::data_dir(),
+            seed: None,
+            wallpaper: Arc::new(SystemWallpaper),
+            wallpaper_picture: PictureSettings::WALLPAPER,
+        }
     }
 }
 
@@ -57,7 +77,10 @@ pub struct Psito3dApp {
     theme_names: Vec<(String, String)>,
     theme_id: String,
     prefs: Prefs,
-    prefs_path: Option<std::path::PathBuf>,
+    prefs_path: Option<PathBuf>,
+    data_dir: Option<PathBuf>,
+    wallpaper: Arc<dyn WallpaperSetter>,
+    wallpaper_picture: PictureSettings,
     worker: TerrainWorker,
     terrain_status: TerrainStatus,
     heightfield: Option<Heightfield>,
@@ -65,7 +88,7 @@ pub struct Psito3dApp {
     export: Option<ExportJob>,
     previous_scene: Scene,
     last_change: Instant,
-    message: Option<(String, Instant)>,
+    message: Option<(String, Instant, Duration)>,
     rng: SplitMix64,
     last_status: Status,
 }
@@ -111,6 +134,9 @@ impl Psito3dApp {
             theme_id,
             prefs,
             prefs_path: options.prefs_path,
+            data_dir: options.data_dir,
+            wallpaper: options.wallpaper,
+            wallpaper_picture: options.wallpaper_picture,
             terrain_status: TerrainStatus::Ready,
             heightfield: None,
             export: None,
@@ -127,7 +153,11 @@ impl Psito3dApp {
     }
 
     fn say(&mut self, text: String) {
-        self.message = Some((text, Instant::now()));
+        self.message = Some((text, Instant::now(), MESSAGE_TIME));
+    }
+
+    fn say_long(&mut self, text: String) {
+        self.message = Some((text, Instant::now(), LONG_MESSAGE_TIME));
     }
 
     fn save_prefs(&self) {
@@ -206,6 +236,7 @@ impl Psito3dApp {
             ToolbarAction::Open => self.open(),
             ToolbarAction::Save => self.save(),
             ToolbarAction::Export => self.export(rs),
+            ToolbarAction::Wallpaper => self.make_wallpaper(ctx, rs),
             ToolbarAction::Theme(id) => self.set_theme(ctx, &id),
             ToolbarAction::Language(code) => self.set_language(&code),
         }
@@ -251,7 +282,59 @@ impl Psito3dApp {
         else {
             return;
         };
-        self.export = Some(ExportJob::start(rs, &self.editor.scene, field, path));
+        self.export =
+            Some(ExportJob::start(rs, &self.editor.scene, field, path, PictureSettings::EXPORT, Purpose::File));
+    }
+
+    /// Renders the scene at the size of the screen and puts it on the desktop.
+    fn make_wallpaper(&mut self, ctx: &egui::Context, rs: Option<&RenderState>) {
+        let (Some(rs), Some(field)) = (rs, &self.heightfield) else { return };
+        let Some(dir) = self.data_dir.as_ref().map(|d| d.join("wallpapers")) else {
+            let text =
+                self.i18n.tr_args("wallpaper-failed", &[("reason", "no data folder".into()), ("path", "-".into())]);
+            self.say_long(text);
+            return;
+        };
+        // The screen in physical pixels, when the window system tells.
+        let screen = ctx.input(|i| {
+            let ppp = i.viewport().native_pixels_per_point.unwrap_or(1.0);
+            i.viewport().monitor_size.map(|s| ((s.x * ppp).round() as u32, (s.y * ppp).round() as u32))
+        });
+        let settings = PictureSettings::wallpaper_for(screen, self.wallpaper_picture);
+        prune_wallpapers(&dir, WALLPAPERS_KEPT - 1);
+        let stamp =
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_millis() as u64);
+        let path = new_wallpaper_path(&dir, stamp);
+        let purpose = Purpose::Wallpaper(Arc::clone(&self.wallpaper));
+        self.export = Some(ExportJob::start(rs, &self.editor.scene, field, path, settings, purpose));
+    }
+
+    fn finish_picture(&mut self, outcome: Outcome) {
+        match outcome {
+            Outcome::Saved(path) => {
+                let text = format!("{}: {}", self.i18n.tr("exported"), path.display());
+                self.say(text);
+            }
+            Outcome::WallpaperSet(_) => {
+                let text = self.i18n.tr("wallpaper-set");
+                self.say(text);
+            }
+            Outcome::WallpaperFailed(path, error) => {
+                let reason = match error {
+                    WallpaperError::Unsupported => self.i18n.tr("wallpaper-unsupported"),
+                    WallpaperError::Failed(why) => why,
+                };
+                let text = self.i18n.tr_args(
+                    "wallpaper-failed",
+                    &[("reason", reason.into()), ("path", path.display().to_string().into())],
+                );
+                self.say_long(text);
+            }
+            Outcome::Failed(e) => {
+                let text = self.i18n.tr_args("save-failed", &[("reason", e.into())]);
+                self.say_long(text);
+            }
+        }
     }
 
     fn pick_picture(&mut self) {
@@ -284,13 +367,14 @@ impl Psito3dApp {
     }
 
     fn status(&mut self) -> Status {
-        if self.message.as_ref().is_some_and(|(_, at)| at.elapsed() > MESSAGE_TIME) {
+        if self.message.as_ref().is_some_and(|(_, at, keep)| at.elapsed() > *keep) {
             self.message = None;
         }
         let (samples, target) = self.gpu.as_ref().map_or((0, 1), GpuViewport::progress);
-        let mut message = self.message.as_ref().map(|(m, _)| m.clone());
+        let mut message = self.message.as_ref().map(|(m, _, _)| m.clone());
         if let Some(job) = &self.export {
-            message = Some(format!("{} {:.0}%", self.i18n.tr("export-image"), job.progress() * 100.0));
+            let what = if job.is_wallpaper() { "wallpaper-working" } else { "export-image" };
+            message = Some(format!("{} {:.0}%", self.i18n.tr(what), (job.progress() * 100.0).min(100.0)));
         }
         Status {
             samples,
@@ -372,13 +456,9 @@ impl eframe::App for Psito3dApp {
         }
         if let (Some(job), Some(rs)) = (&mut self.export, rs) {
             busy = true;
-            if let Some(result) = job.step(rs) {
+            if let Some(outcome) = job.step(rs) {
                 self.export = None;
-                let text = match result {
-                    Ok(path) => format!("{}: {}", self.i18n.tr("exported"), path.display()),
-                    Err(e) => self.i18n.tr_args("save-failed", &[("reason", e.into())]),
-                };
-                self.say(text);
+                self.finish_picture(outcome);
             }
         }
         if busy || self.message.is_some() {

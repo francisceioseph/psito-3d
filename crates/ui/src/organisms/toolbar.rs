@@ -20,6 +20,8 @@ pub enum ToolbarAction {
     Save,
     /// Render and save a picture.
     Export,
+    /// Render the picture and put it on the desktop.
+    Wallpaper,
     /// Undo the last change.
     Undo,
     /// Redo it.
@@ -59,6 +61,7 @@ impl Toolbar<'_> {
                 (Icon::Open, "open-scene", ToolbarAction::Open),
                 (Icon::Save, "save-scene", ToolbarAction::Save),
                 (Icon::Picture, "export-image", ToolbarAction::Export),
+                (Icon::Monitor, "set-wallpaper", ToolbarAction::Wallpaper),
             ] {
                 if ui.add(IconButton::new(icon, i18n.tr(key))).clicked() {
                     act(a);

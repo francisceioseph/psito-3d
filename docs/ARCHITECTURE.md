@@ -33,6 +33,7 @@ newer files are refused instead of being read wrong.
 | Atomic design | `psito3d-ui` | Small widgets compose into panels; a theme changes all of them at once. |
 | Design tokens | `Theme` | No widget has a literal colour or size; they read the theme from the egui context. |
 | Dependency injection | `AppOptions`, `EditorPage` | Paths, seeds and data come in from outside, so tests can run the real app on temporary folders. |
+| Strategy, again | `WallpaperSetter` (`SystemWallpaper`, a fake in the tests) | Each desktop sets the wallpaper its own way; `detect` and `plan` decide what to run and are tested for every desktop, and the end-to-end tests never touch the real wallpaper. |
 | Worker with cancellation | `TerrainWorker`, `CancelToken` | Dragging a slider replaces the terrain being built instead of queueing them. |
 
 ## Rendering

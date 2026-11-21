@@ -20,16 +20,26 @@ pub fn config_dir() -> Option<PathBuf> {
         .map(|d| d.join(APP_DIR))
 }
 
-/// The folder of the person's own plugins: `$XDG_DATA_HOME/psito-3d/plugins`
-/// (or `~/.local/share/...`), or `%APPDATA%\psito-3d\plugins` on Windows.
-pub fn user_plugin_dir() -> Option<PathBuf> {
+/// The folder of the program's own data (plugins, wallpapers):
+/// `$XDG_DATA_HOME/psito-3d` (or `~/.local/share/psito-3d`),
+/// `~/Library/Application Support/psito-3d` on macOS, or
+/// `%APPDATA%\psito-3d` on Windows.
+pub fn data_dir() -> Option<PathBuf> {
     if cfg!(windows) {
-        return std::env::var_os("APPDATA").map(|d| PathBuf::from(d).join(APP_DIR).join("plugins"));
+        return std::env::var_os("APPDATA").map(|d| PathBuf::from(d).join(APP_DIR));
+    }
+    if cfg!(target_os = "macos") {
+        return home().map(|h| h.join("Library/Application Support").join(APP_DIR));
     }
     std::env::var_os("XDG_DATA_HOME")
         .map(PathBuf::from)
         .or_else(|| home().map(|h| h.join(".local/share")))
-        .map(|d| d.join(APP_DIR).join("plugins"))
+        .map(|d| d.join(APP_DIR))
+}
+
+/// The folder of the person's own plugins, inside [`data_dir`].
+pub fn user_plugin_dir() -> Option<PathBuf> {
+    data_dir().map(|d| d.join("plugins"))
 }
 
 /// Every folder plugins are looked for in, the person's own first, so they

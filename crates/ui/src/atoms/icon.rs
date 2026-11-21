@@ -45,6 +45,8 @@ pub enum Icon {
     Torus,
     /// A blank page.
     New,
+    /// A screen on its stand: the desktop.
+    Monitor,
 }
 
 fn arc(center: Pos2, radius: f32, from: f32, to: f32) -> Vec<Pos2> {
@@ -189,6 +191,13 @@ pub fn paint_icon(painter: &Painter, rect: Rect, icon: Icon, color: Color32) {
             let squash = |q: Pos2| pos2(q.x, c.y + (q.y - c.y) * 0.55);
             line(arc(c, s * 0.45, 0.0, 2.0 * PI).into_iter().map(squash).collect());
             line(arc(c, s * 0.18, 0.0, 2.0 * PI).into_iter().map(squash).collect());
+        }
+        Icon::Monitor => {
+            painter.rect_stroke(Rect::from_min_max(p(-0.8, -0.65), p(0.8, 0.4)), 1, stroke, egui::StrokeKind::Middle);
+            // A little mountain on the screen: it is a picture on the desktop.
+            line(vec![p(-0.55, 0.25), p(-0.15, -0.2), p(0.1, 0.05), p(0.3, -0.1), p(0.6, 0.25)]);
+            painter.line_segment([p(0.0, 0.4), p(0.0, 0.7)], stroke);
+            painter.line_segment([p(-0.35, 0.72), p(0.35, 0.72)], stroke);
         }
         Icon::New => {
             line(vec![p(-0.55, -0.75), p(0.2, -0.75), p(0.55, -0.4), p(0.55, 0.75), p(-0.55, 0.75), p(-0.55, -0.75)]);

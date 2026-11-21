@@ -6,6 +6,7 @@ new-scene = New scene
 open-scene = Open scene
 save-scene = Save scene
 export-image = Save picture
+set-wallpaper = Use as wallpaper
 undo = Undo
 redo = Redo
 filter-none = Clean
@@ -94,6 +95,10 @@ plugin-errors = { $count ->
     [one] One plugin did not load
    *[other] { $count } plugins did not load
 }
+wallpaper-working = Making the wallpaper
+wallpaper-set = Wallpaper changed
+wallpaper-unsupported = this desktop has no known way to change it
+wallpaper-failed = Could not change the wallpaper ({ $reason }). The picture is in { $path }
 saved = Saved
 exported = Picture saved
 open-failed = Could not open: { $reason }

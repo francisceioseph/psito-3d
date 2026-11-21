@@ -6,6 +6,7 @@ new-scene = Nova cena
 open-scene = Abrir cena
 save-scene = Salvar cena
 export-image = Salvar imagem
+set-wallpaper = Usar como papel de parede
 undo = Desfazer
 redo = Refazer
 filter-none = Limpa
@@ -94,6 +95,10 @@ plugin-errors = { $count ->
     [one] Um plugin não carregou
    *[other] { $count } plugins não carregaram
 }
+wallpaper-working = Fazendo o papel de parede
+wallpaper-set = Papel de parede trocado
+wallpaper-unsupported = este ambiente não tem um jeito conhecido de trocá-lo
+wallpaper-failed = Não foi possível trocar o papel de parede ({ $reason }). A imagem está em { $path }
 saved = Salva
 exported = Imagem salva
 open-failed = Não foi possível abrir: { $reason }
