@@ -5,6 +5,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
+repository.workspace = true
 default-run = "psito-3d"
 
 [lib]
@@ -31,6 +32,9 @@ serde.workspace = true
 serde_json.workspace = true
 sys-locale.workspace = true
 wgpu.workspace = true
+
+[build-dependencies]
+winresource = "0.1"
 
 [dev-dependencies]
 egui_kittest = { workspace = true, features = ["wgpu", "eframe"] }

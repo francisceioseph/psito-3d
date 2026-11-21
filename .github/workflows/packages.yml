@@ -1,0 +1,75 @@
+name: Linux packages
+
+# Builds the .deb and the .rpm of a version, attaches them to the release, and
+# publishes on GitHub Pages the project page (site/) and the APT and DNF
+# repositories with the last three versions. Pages keeps nothing between
+# deployments: the older packages come from the releases.
+on:
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: The version to package, like v0.2.0
+        type: string
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TAG: ${{ inputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-about
+      - name: System tools
+        run: sudo apt-get update && sudo apt-get install -y apt-utils rpm createrepo-c
+      - name: Build the packages
+        run: |
+          tool/third-party-licenses.sh target/THIRD_PARTY_LICENSES.md
+          export THIRD_PARTY_LICENSES=target/THIRD_PARTY_LICENSES.md
+          tool/build-deb.sh target/deb
+          tool/build-rpm.sh target/rpm --no-build
+      - name: Attach the .deb to the release
+        run: gh release upload "$TAG" target/deb/*.deb --clobber
+      - name: Fetch the last three versions
+        run: |
+          mkdir -p target/pkgs
+          gh release list --limit 3 --json tagName --jq '.[].tagName' |
+            while read -r tag; do
+              gh release download "$tag" --pattern '*.deb' --pattern '*.rpm' --dir target/pkgs || true
+            done
+          cp target/rpm/*.rpm target/pkgs/
+      - name: Build the repositories
+        env:
+          APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
+        run: |
+          gpg --batch --import <<< "$APT_SIGNING_KEY"
+          tool/build-apt-repo.sh target/site target/pkgs/*.deb
+          tool/build-dnf-repo.sh target/site https://francisceioseph.github.io/psito-3d target/pkgs/*.rpm
+          cp -r site/. target/site/
+          cp assets/icon.png docs/screenshot.png target/site/
+      - name: Attach the signed .rpm to the release
+        run: gh release upload "$TAG" "target/site/rpm/$(basename target/rpm/*.rpm)" --clobber
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: target/site
+      - id: deploy
+        uses: actions/deploy-pages@v4

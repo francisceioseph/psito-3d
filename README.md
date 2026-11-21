@@ -28,14 +28,48 @@ interface.
 - **Themes** that restyle every control, built in or from plugins
 - In English and Portuguese
 
-## Run
+## Install
 
-You need Rust 1.88 or newer and a GPU with Vulkan, Metal or DirectX 12
-(Mesa's llvmpipe works, slowly).
+### On Windows
+
+Windows 10 version 1809 or newer, or Windows 11, on x64. Download
+[the installer](https://github.com/francisceioseph/psito-3d/releases/latest/download/psito-3d-windows-x64-setup.exe)
+and run it. It doesn't ask for administrator rights.
+
+The installer isn't signed with a paid certificate, so SmartScreen may warn that it
+comes from an unknown publisher: choose **More info**, then **Run anyway**.
+
+### From the APT repository
+
+On Debian 13 or newer, Ubuntu 24.04 or newer, or Mint 22 or newer. It updates along with the system:
+
+```bash
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://francisceioseph.github.io/psito-3d/psito-3d.asc | sudo tee /etc/apt/keyrings/psito-3d.asc >/dev/null
+printf 'Types: deb\nURIs: https://francisceioseph.github.io/psito-3d\nSuites: stable\nComponents: main\nArchitectures: amd64\nSigned-By: /etc/apt/keyrings/psito-3d.asc\n' | sudo tee /etc/apt/sources.list.d/psito-3d.sources >/dev/null
+sudo apt update
+sudo apt install psito-3d
+```
+
+### From the DNF repository
+
+On Fedora, on x86_64. The first install asks you to accept the signing key:
+
+```bash
+sudo curl -fsSL -o /etc/yum.repos.d/psito-3d.repo https://francisceioseph.github.io/psito-3d/psito-3d.repo
+sudo dnf install psito-3d
+```
+
+### From the source
+
+On any system with Rust 1.88 or newer and a GPU with Vulkan, Metal or DirectX 12
+(Mesa's llvmpipe works, slowly). This is also the way on macOS, for now.
 
 ```bash
 cargo run --release
 ```
+
+## Use
 
 Drag on the image to turn around, right-drag (or Shift-drag) to slide, and
 scroll to come closer. Ctrl+Z and Ctrl+Shift+Z undo and redo, Ctrl+S saves,
@@ -65,7 +99,11 @@ time limit. See [docs/PLUGINS.md](docs/PLUGINS.md) and the examples in
 tool/check.sh          # format, lint and every test
 tool/check.sh --quick  # without the GPU and end-to-end tests
 cargo run --release -p psito3d-render --example snapshot -- out.png
+tool/build-deb.sh      # target/packages/psito-3d_<version>_amd64.deb
+tool/build-rpm.sh      # the same as .rpm (needs rpmbuild)
 ```
+
+Releases are made by the CI: see [docs/RELEASING.md](docs/RELEASING.md).
 
 How the code is organised, and why, is in
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).

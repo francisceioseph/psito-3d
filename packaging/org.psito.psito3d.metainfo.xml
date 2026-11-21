@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- What software centres (GNOME Software, Discover) show about the program. -->
+<component type="desktop-application">
+  <id>org.psito.psito3d</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>Apache-2.0</project_license>
+  <name>Psito 3D</name>
+  <summary>Make landscapes of mountains, sea, sky and chrome balls</summary>
+  <summary xml:lang="pt">Crie paisagens de montanhas, mar, céu e esferas cromadas</summary>
+  <description>
+    <p>
+      Make landscapes the way it felt in the 90s: drag the sun across the sky,
+      roll a new world with a die, melt chrome balls into each other and watch
+      the picture sharpen while you look at it.
+    </p>
+    <p xml:lang="pt">
+      Crie paisagens como nos anos 90: arraste o sol pelo céu, sorteie um mundo
+      novo com um dado, derreta esferas cromadas umas nas outras e veja a
+      imagem ficar nítida enquanto você olha.
+    </p>
+    <p>
+      Terrains and themes can come from plugins written in Lua, which run in a
+      sandbox. No account, no ads and no telemetry.
+    </p>
+    <p xml:lang="pt">
+      Terrenos e temas podem vir de plugins escritos em Lua, que rodam num
+      sandbox. Sem conta, sem anúncios e sem telemetria.
+    </p>
+  </description>
+  <launchable type="desktop-id">org.psito.psito3d.desktop</launchable>
+  <url type="homepage">https://francisceioseph.github.io/psito-3d/</url>
+  <url type="bugtracker">https://github.com/francisceioseph/psito-3d/issues</url>
+  <developer id="io.github.francisceioseph">
+    <name>Francisco Souza</name>
+  </developer>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/francisceioseph/psito-3d/main/docs/screenshot.png</image>
+      <caption>A volcanic island made by a Lua plugin</caption>
+    </screenshot>
+  </screenshots>
+  <categories>
+    <category>Graphics</category>
+    <category>3DGraphics</category>
+  </categories>
+  <content_rating type="oars-1.1"/>
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </supports>
+  <releases>
+    <release version="0.1.0" date="2026-11-21"/>
+  </releases>
+</component>

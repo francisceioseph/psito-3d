@@ -20,5 +20,83 @@ jobs:
       - name: System libraries
         run: |
           sudo apt-get update
-          sudo apt-get install -y mesa-vulkan-drivers libvulkan1 libxkbcommon-dev libwayland-dev libgtk-3-dev
+          sudo apt-get install -y mesa-vulkan-drivers libvulkan1 libxkbcommon-dev libwayland-dev
       - run: tool/check.sh
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-about
+      # A new dependency under a license not in about.toml fails here.
+      - run: tool/third-party-licenses.sh target/THIRD_PARTY_LICENSES.md
+
+  # These two only check that the program builds there; they do not hold the
+  # release back.
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --release --locked -p psito-3d
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --release --locked -p psito-3d
+
+  # The version is the last tag: feat raises the minor, fix the patch and
+  # BREAKING CHANGE the major.
+  release:
+    needs: check
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    outputs:
+      tag: ${{ steps.new_tag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Tag and publish the release
+        run: >-
+          npx --yes
+          -p semantic-release@24.2.9
+          -p @semantic-release/exec@7.1.0
+          -p @semantic-release/git@11.0.1
+          semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: The tag, if this run made one
+        id: new_tag
+        run: |
+          tag="$(git tag --points-at HEAD 'v*' | head -1)"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+  packages:
+    needs: release
+    if: needs.release.outputs.tag != ''
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/packages.yml
+    with:
+      tag: ${{ needs.release.outputs.tag }}
+    secrets: inherit
+
+  windows-installer:
+    needs: release
+    if: needs.release.outputs.tag != ''
+    permissions:
+      contents: write
+    uses: ./.github/workflows/windows.yml
+    with:
+      tag: ${{ needs.release.outputs.tag }}
+    secrets: inherit

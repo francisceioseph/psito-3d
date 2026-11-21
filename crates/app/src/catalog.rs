@@ -50,6 +50,12 @@ impl Catalog {
         for e in &errors {
             log::warn!("plugin: {e}");
         }
+        log::info!(
+            "plugins: {} loaded ({}), {} failed",
+            registry.plugins.len(),
+            registry.plugins.iter().map(|p| p.manifest.id.as_str()).collect::<Vec<_>>().join(", "),
+            errors.len()
+        );
         Self { generators: Arc::new(generators), themes, errors }
     }
 

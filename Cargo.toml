@@ -16,14 +16,13 @@ psito3d-plugins = { path = "crates/plugins" }
 psito3d-render = { path = "crates/render" }
 psito3d-ui = { path = "crates/ui" }
 
-anyhow = "1"
 bytemuck = { version = "1", features = ["derive"] }
 eframe = { version = "0.37", default-features = false, features = ["accesskit", "default_fonts", "wayland", "x11", "wgpu"] }
 egui = { version = "0.37", features = ["default_fonts"] }
 egui_kittest = { version = "0.37" }
 fluent-bundle = "0.16"
 glam = { version = "0.34", features = ["serde", "bytemuck"] }
-image = { version = "0.25", default-features = false, features = ["png", "jpeg", "bmp", "webp", "gif"] }
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "bmp", "webp", "gif", "ico"] }
 log = "0.4"
 env_logger = "0.11"
 mlua = { version = "0.12", features = ["lua54", "vendored"] }
@@ -53,3 +52,4 @@ opt-level = 2
 
 [profile.release]
 lto = "thin"
+strip = true
