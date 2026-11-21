@@ -112,9 +112,10 @@ fn the_terrain_form_follows_the_generator() {
     harness.run();
     // The parameter label comes from the description, in Portuguese.
     harness.get_by_role_and_label(Role::Slider, "Altura");
-    // Showing the form fills in the defaults.
+    // Showing the form does not touch the scene.
     let TerrainSource::Generator { params, .. } = &harness.state().scene.terrain.source else { panic!() };
-    assert_eq!(params, &resolve_params(&generators()[0].params, &Default::default()));
+    assert!(params.is_empty());
+    let _ = resolve_params;
     harness.get_by_label("Sortear outra semente").click();
     harness.run();
     assert_eq!(harness.state().terrain_action, Some(TerrainAction::RollSeed));
@@ -131,6 +132,7 @@ fn the_toolbar_reports_actions_and_disables_undo() {
                 themes: &themes,
                 theme: "psito.dusk",
                 filter: &mut s.scene.filter,
+                orbiting: false,
             };
             if let Some(a) = toolbar.show(ui, &s.i18n) {
                 actions.push(a);
@@ -171,4 +173,28 @@ fn every_control_has_a_name() {
             assert!(!label.trim().is_empty(), "a {role:?} has no name");
         }
     }
+}
+
+#[test]
+fn the_scene_code_window_opens_a_pasted_code() {
+    use psito3d_ui::organisms::SceneCodeDialog;
+    let mut dialog = SceneCodeDialog::default();
+    dialog.show_window();
+    let mut harness = Harness::builder().with_size(egui::vec2(800.0, 600.0)).build_ui_state(
+        |ui, (d, opened, i18n): &mut (SceneCodeDialog, Option<String>, I18n)| {
+            if let Some(code) = d.show(ui.ctx(), i18n, "p3d1.current", false) {
+                *opened = Some(code);
+            }
+        },
+        (dialog, None, I18n::new("en")),
+    );
+    harness.run();
+    let field = harness.get_by_role_and_label(Role::MultilineTextInput, "Paste a code to open its world");
+    field.focus();
+    harness.run();
+    harness.get_by_role_and_label(Role::MultilineTextInput, "Paste a code to open its world").type_text("p3d1.abc");
+    harness.run();
+    harness.get_by_label("Open").click();
+    harness.run();
+    assert_eq!(harness.state().1.as_deref(), Some("p3d1.abc"));
 }

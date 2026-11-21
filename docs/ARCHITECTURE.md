@@ -17,8 +17,9 @@ so most of the logic is tested in milliseconds.
 
 ## The scene
 
-A `Scene` is data: terrain recipe, sky, fog, sea, objects, camera, filter.
-It never says how it is drawn. Values read from files are clamped
+A `Scene` is data: terrain recipe (with the brush strokes), sky, fog, sea,
+objects, camera, filter. It never says how it is drawn. The camera is the
+view, not the work: moving it is never an undo step (`Scene::same_world`). Values read from files are clamped
 (`Scene::sanitize`, `ParamSpec::sanitize`) because files and plugins can be
 edited by hand. The file format (`.psito3d`) is JSON with a `format` version;
 newer files are refused instead of being read wrong.
@@ -34,7 +35,8 @@ newer files are refused instead of being read wrong.
 | Design tokens | `Theme` | No widget has a literal colour or size; they read the theme from the egui context. |
 | Dependency injection | `AppOptions`, `EditorPage` | Paths, seeds and data come in from outside, so tests can run the real app on temporary folders. |
 | Strategy, again | `WallpaperSetter` (`SystemWallpaper`, a fake in the tests) | Each desktop sets the wallpaper its own way; `detect` and `plan` decide what to run and are tested for every desktop, and the end-to-end tests never touch the real wallpaper. |
-| Worker with cancellation | `TerrainWorker`, `CancelToken` | Dragging a slider replaces the terrain being built instead of queueing them. |
+| Worker with cancellation | `TerrainWorker`, `CancelToken` | Dragging a slider replaces the terrain being built instead of queueing them. The worker keeps the generator's ground, so painting only redraws the strokes. |
+| Recipe, not result | `TerrainSettings::strokes` | Brushes store their strokes, not the changed heights: the scene stays small (and fits in a scene code), the world rebuilds the same from its recipe, and one stroke is one undo step. |
 
 ## Rendering
 

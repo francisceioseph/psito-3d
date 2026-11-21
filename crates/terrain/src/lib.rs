@@ -8,11 +8,15 @@
 //! The [`noise`] module is the single source of noise: the built-in
 //! generators use it, and the Lua API hands the same functions to plugins.
 
+mod brush;
 mod builtin;
 mod generator;
 mod heightfield;
 pub mod noise;
 
+pub use brush::{apply_strokes, raycast};
 pub use builtin::builtin_generators;
-pub use generator::{CancelToken, GenerateRequest, GeneratorInfo, TerrainError, TerrainGenerator, generate_terrain};
+pub use generator::{
+    CancelToken, GenerateRequest, GeneratorInfo, TerrainError, TerrainGenerator, generate_base, generate_terrain,
+};
 pub use heightfield::Heightfield;

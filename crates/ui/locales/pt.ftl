@@ -15,6 +15,20 @@ theme = Tema
 language = Idioma
 filter-crt = Tela de tubo
 
+## Código da cena
+scene-code = Código da cena
+scene-code-share = Copie este código para compartilhar este mundo: quem abrir recebe a mesma cena.
+scene-code-picture = Este terreno é uma imagem deste computador; outras pessoas vão precisar da mesma imagem.
+scene-code-paste = Cole um código para abrir o mundo dele
+scene-code-hint = Um código começa com p3d1.
+copy-code = Copiar código
+code-copied = Copiado
+open-code = Abrir
+close = Fechar
+code-invalid = Este não é um código de cena do Psito 3D, ou falta um pedaço dele.
+code-too-new = Este código foi feito por um Psito 3D mais novo.
+orbit = Girar sozinho
+
 ## Céu
 section-sky = Céu
 sun = Sol
@@ -36,6 +50,23 @@ roll-seed = Sortear outra semente
 terrain-height = Escala vertical
 coast = Litoral
 resolution = Detalhe
+
+## Brushes
+section-brushes = Pincéis
+brush-off = Desligado
+brush-raise = Levantar
+brush-lower = Cavar
+brush-smooth = Alisar
+brush-flatten = Aplainar
+brush-size = Tamanho do pincel
+brush-strength = Força
+brush-hint = Arraste na imagem para pintar o chão. O botão direito gira, o do meio desliza.
+clear-strokes = Apagar traços
+brush-strokes = { $count ->
+    [0] Nenhum traço
+    [one] Um traço
+   *[other] { $count } traços
+}
 
 ## Mar e névoa
 section-sea = Mar

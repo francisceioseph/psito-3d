@@ -62,7 +62,9 @@ pub fn terrain_panel(
                 }
             });
         if let Some(g) = picked {
-            terrain.source = TerrainSource::Generator { id: g.id.clone(), params: ParamValues::new() };
+            // Choosing a generator is an edit: its defaults go into the scene.
+            terrain.source =
+                TerrainSource::Generator { id: g.id.clone(), params: resolve_params(&g.params, &ParamValues::new()) };
         }
         if pick_picture {
             action = Some(TerrainAction::PickPicture);
@@ -74,8 +76,10 @@ pub fn terrain_panel(
                     if !g.description.is_empty() {
                         caption(ui, &g.description);
                     }
+                    // Showing the form never changes the scene; only moving a
+                    // control does, so opening a scene is not an undo step.
                     let mut values = resolve_params(&g.params, params);
-                    if super::param_form(ui, i18n.lang(), &g.params, &mut values) || values != *params {
+                    if super::param_form(ui, i18n.lang(), &g.params, &mut values) {
                         *params = values;
                     }
                 } else {

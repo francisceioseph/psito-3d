@@ -11,6 +11,7 @@
 //! to [`TerrainSettings::height`].
 
 mod camera;
+mod code;
 mod history;
 mod object;
 mod params;
@@ -20,6 +21,7 @@ mod sky;
 mod terrain;
 
 pub use camera::Camera;
+pub use code::CODE_PREFIX;
 pub use history::History;
 pub use object::{Combine, Material, ObjectId, SceneObject, Shape, Transform};
 pub use params::{
@@ -28,4 +30,4 @@ pub use params::{
 pub use rng::SplitMix64;
 pub use scene::{FORMAT_VERSION, MAX_OBJECTS, Scene, SceneError};
 pub use sky::{Filter, Fog, Sea, Sky, Sun};
-pub use terrain::{TerrainSettings, TerrainSource};
+pub use terrain::{BrushStroke, BrushTool, TerrainSettings, TerrainSource};

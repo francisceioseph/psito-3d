@@ -47,6 +47,12 @@ pub enum Icon {
     New,
     /// A screen on its stand: the desktop.
     Monitor,
+    /// Three linked dots: share.
+    Share,
+    /// An arrow going round: turn around by itself.
+    Orbit,
+    /// A brush.
+    Brush,
 }
 
 fn arc(center: Pos2, radius: f32, from: f32, to: f32) -> Vec<Pos2> {
@@ -198,6 +204,34 @@ pub fn paint_icon(painter: &Painter, rect: Rect, icon: Icon, color: Color32) {
             line(vec![p(-0.55, 0.25), p(-0.15, -0.2), p(0.1, 0.05), p(0.3, -0.1), p(0.6, 0.25)]);
             painter.line_segment([p(0.0, 0.4), p(0.0, 0.7)], stroke);
             painter.line_segment([p(-0.35, 0.72), p(0.35, 0.72)], stroke);
+        }
+        Icon::Share => {
+            let (a, b, c) = (p(0.5, -0.55), p(-0.5, 0.0), p(0.5, 0.55));
+            painter.line_segment([a, b], stroke);
+            painter.line_segment([b, c], stroke);
+            for q in [a, b, c] {
+                painter.circle_filled(q, s * 0.13, color);
+            }
+        }
+        Icon::Orbit => {
+            let squash = |q: Pos2| pos2(q.x, c.y + (q.y - c.y) * 0.45);
+            let pts: Vec<Pos2> = arc(c, s * 0.42, 0.3, 2.0 * PI - 0.3).into_iter().map(squash).collect();
+            let end = pts[pts.len() - 1];
+            line(pts);
+            painter.add(Shape::convex_polygon(
+                vec![end + vec2(0.0, -0.16) * s, end + vec2(0.0, 0.16) * s, end + vec2(0.2, 0.02) * s],
+                color,
+                Stroke::NONE,
+            ));
+            painter.circle_filled(c, s * 0.12, color);
+        }
+        Icon::Brush => {
+            painter.line_segment([p(0.7, -0.7), p(-0.05, 0.1)], Stroke::new(w * 1.4, color));
+            painter.add(Shape::convex_polygon(
+                vec![p(-0.05, 0.05), p(0.05, 0.2), p(-0.3, 0.75), p(-0.75, 0.7), p(-0.45, 0.25)],
+                color,
+                Stroke::NONE,
+            ));
         }
         Icon::New => {
             line(vec![p(-0.55, -0.75), p(0.2, -0.75), p(0.55, -0.4), p(0.55, 0.75), p(-0.55, 0.75), p(-0.55, -0.75)]);

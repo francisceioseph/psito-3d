@@ -17,6 +17,7 @@ interface.
 - **Surprise me**: a whole new world from one seed
 - **Terrains** from three built-in shapes (hills, island, mountains), from
   Lua plugins, or **from a picture**, where white is high and black is low
+- **Brushes** to raise, dig, smooth and flatten the ground by painting on the picture
 - **The endless sea**, a mirror up to the horizon, with ripples
 - **Fog and valley mist**, haze and clouds
 - **Objects**: balls, boxes, cylinders, cones and rings in chrome, gold,
@@ -25,6 +26,9 @@ interface.
   a clean image that sharpens sample by sample
 - **Finishing filters**: 256 colours with dithering, or a tube screen
 - **Undo and redo**, scenes saved as `.psito3d`, pictures saved as PNG
+- **Scene codes**: a whole world in one line of text, to paste in a chat so
+  someone else opens the same scene
+- **Turn around by itself**: the camera circles the scene while you watch
 - **Use as wallpaper**, rendered at the size of your screen, on GNOME,
   Cinnamon, MATE, KDE Plasma, Xfce, Windows and macOS
 - **Themes** that restyle every control, built in or from plugins
@@ -74,7 +78,8 @@ cargo run --release
 ## Use
 
 Drag on the image to turn around, right-drag (or Shift-drag) to slide, and
-scroll to come closer. Ctrl+Z and Ctrl+Shift+Z undo and redo, Ctrl+S saves,
+scroll to come closer. With a brush picked, the left button paints the
+ground, the right one turns and the middle one slides. Ctrl+Z and Ctrl+Shift+Z undo and redo, Ctrl+S saves,
 Ctrl+O opens and Ctrl+E saves a picture.
 
 ## Plugins

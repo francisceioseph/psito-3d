@@ -19,6 +19,8 @@ pub struct EditorState {
     pub selected: Option<ObjectId>,
     /// The file the scene was opened from or saved to.
     pub file: Option<PathBuf>,
+    /// The terrain brush in hand.
+    pub brush: psito3d_ui::organisms::BrushSettings,
     history: History,
     settled: Scene,
     saved: Scene,
@@ -53,6 +55,7 @@ impl EditorState {
             scene,
             selected: None,
             file: None,
+            brush: Default::default(),
             history: History::default(),
         }
     }
@@ -60,7 +63,12 @@ impl EditorState {
     /// Records the change since the last call in the history, unless the
     /// person is still dragging (`pointer_down`). Returns whether it did.
     pub fn settle(&mut self, pointer_down: bool) -> bool {
-        if pointer_down || self.scene == self.settled {
+        if pointer_down {
+            return false;
+        }
+        if self.scene.same_world(&self.settled) {
+            // Only the camera moved: remember it, but it is not an undo step.
+            self.settled.camera = self.scene.camera;
             return false;
         }
         self.history.checkpoint(&self.settled);
@@ -73,7 +81,10 @@ impl EditorState {
     pub fn undo(&mut self) -> bool {
         // A change still in progress is settled first, so it is the one undone.
         self.settle(false);
+        let camera = self.scene.camera;
         let done = self.history.undo(&mut self.scene);
+        // Undo brings the world back, not the view.
+        self.scene.camera = camera;
         self.settled = self.scene.clone();
         self.drop_stale_selection();
         done
@@ -81,7 +92,9 @@ impl EditorState {
 
     /// Goes one step forward again.
     pub fn redo(&mut self) -> bool {
+        let camera = self.scene.camera;
         let done = self.history.redo(&mut self.scene);
+        self.scene.camera = camera;
         self.settled = self.scene.clone();
         self.drop_stale_selection();
         done
@@ -89,7 +102,7 @@ impl EditorState {
 
     /// Whether there is anything to undo, counting a change not yet settled.
     pub fn can_undo(&self) -> bool {
-        self.history.can_undo() || self.scene != self.settled
+        self.history.can_undo() || !self.scene.same_world(&self.settled)
     }
 
     /// Whether there is anything to redo.
@@ -169,6 +182,22 @@ mod tests {
         assert_eq!(e.scene.sky.haze, Scene::default().sky.haze);
         assert!(e.redo());
         assert_eq!(e.scene.sky.haze, 0.6);
+    }
+
+    #[test]
+    fn moving_the_camera_is_not_an_undo_step() {
+        let mut e = EditorState::new(Scene::default());
+        e.scene.sky.haze = 0.9;
+        e.settle(false);
+        for _ in 0..500 {
+            e.scene.camera.orbit(1.0, 0.0);
+            assert!(!e.settle(false));
+        }
+        let view = e.scene.camera;
+        assert!(e.undo(), "the haze change is still there to undo");
+        assert_eq!(e.scene.sky.haze, Scene::default().sky.haze);
+        assert_eq!(e.scene.camera, view, "and the view stays where it is");
+        assert!(!e.can_undo());
     }
 
     #[test]

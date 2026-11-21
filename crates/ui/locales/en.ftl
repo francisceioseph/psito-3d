@@ -15,6 +15,20 @@ theme = Theme
 language = Language
 filter-crt = Tube screen
 
+## Scene code
+scene-code = Scene code
+scene-code-share = Copy this code to share this world: whoever opens it gets the same scene.
+scene-code-picture = This terrain is a picture on this computer; others will need the same picture.
+scene-code-paste = Paste a code to open its world
+scene-code-hint = A code starts with p3d1.
+copy-code = Copy code
+code-copied = Copied
+open-code = Open
+close = Close
+code-invalid = This is not a Psito 3D scene code, or part of it is missing.
+code-too-new = This code was made by a newer Psito 3D.
+orbit = Turn around by itself
+
 ## Sky
 section-sky = Sky
 sun = Sun
@@ -36,6 +50,23 @@ roll-seed = Roll a new seed
 terrain-height = Vertical scale
 coast = Coast
 resolution = Detail
+
+## Brushes
+section-brushes = Brushes
+brush-off = Off
+brush-raise = Raise
+brush-lower = Dig
+brush-smooth = Smooth
+brush-flatten = Flatten
+brush-size = Brush size
+brush-strength = Strength
+brush-hint = Drag on the image to paint the ground. The right button turns around, the middle one slides.
+clear-strokes = Clear strokes
+brush-strokes = { $count ->
+    [0] No strokes
+    [one] One stroke
+   *[other] { $count } strokes
+}
 
 ## Sea and fog
 section-sea = Sea

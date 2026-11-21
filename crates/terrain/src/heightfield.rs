@@ -84,6 +84,14 @@ impl Heightfield {
         self.data[(y.min(self.size - 1) * self.size + x.min(self.size - 1)) as usize]
     }
 
+    /// Sets the height at column `x` and row `y`, clamped to `[0, 1]`.
+    /// Coordinates outside the field are ignored.
+    pub fn set(&mut self, x: u32, y: u32, h: f32) {
+        if x < self.size && y < self.size {
+            self.data[(y * self.size + x) as usize] = if h.is_finite() { h.clamp(0.0, 1.0) } else { 0.0 };
+        }
+    }
+
     /// The height at `(u, v)` in `[-1, 1]`, interpolated between samples.
     pub fn sample(&self, u: f32, v: f32) -> f32 {
         let n = (self.size - 1) as f32;

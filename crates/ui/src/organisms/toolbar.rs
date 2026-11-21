@@ -22,6 +22,10 @@ pub enum ToolbarAction {
     Export,
     /// Render the picture and put it on the desktop.
     Wallpaper,
+    /// Show the scene code window.
+    SceneCode,
+    /// Start or stop the camera turning by itself.
+    ToggleOrbit,
     /// Undo the last change.
     Undo,
     /// Redo it.
@@ -44,6 +48,8 @@ pub struct Toolbar<'a> {
     pub theme: &'a str,
     /// The finishing filter, edited in place.
     pub filter: &'a mut Filter,
+    /// Whether the camera is turning by itself.
+    pub orbiting: bool,
 }
 
 impl Toolbar<'_> {
@@ -62,6 +68,7 @@ impl Toolbar<'_> {
                 (Icon::Save, "save-scene", ToolbarAction::Save),
                 (Icon::Picture, "export-image", ToolbarAction::Export),
                 (Icon::Monitor, "set-wallpaper", ToolbarAction::Wallpaper),
+                (Icon::Share, "scene-code", ToolbarAction::SceneCode),
             ] {
                 if ui.add(IconButton::new(icon, i18n.tr(key))).clicked() {
                     act(a);
@@ -73,6 +80,10 @@ impl Toolbar<'_> {
             }
             if ui.add(IconButton::new(Icon::Redo, i18n.tr("redo")).enabled(self.can_redo)).clicked() {
                 act(ToolbarAction::Redo);
+            }
+            ui.separator();
+            if ui.add(IconButton::new(Icon::Orbit, i18n.tr("orbit")).selected(self.orbiting)).clicked() {
+                act(ToolbarAction::ToggleOrbit);
             }
             ui.separator();
             for (f, key) in

@@ -124,11 +124,24 @@ pub trait TerrainGenerator: Send + Sync {
 }
 
 /// Builds the heightfield of `settings`: runs the generator, or reads the
-/// picture, and then slopes the border.
+/// picture, slopes the border and paints the brush strokes.
 ///
 /// `find` looks a generator up by id, and `base_dir` resolves the relative
 /// picture paths of a scene file.
 pub fn generate_terrain<'a>(
+    settings: &TerrainSettings,
+    find: impl Fn(&str) -> Option<&'a dyn TerrainGenerator>,
+    base_dir: Option<&std::path::Path>,
+    cancel: &CancelToken,
+) -> Result<Heightfield, TerrainError> {
+    let mut field = generate_base(settings, find, base_dir, cancel)?;
+    crate::apply_strokes(&mut field, &settings.strokes, settings.extent);
+    Ok(field)
+}
+
+/// Like [`generate_terrain`], without the brush strokes: the ground the
+/// generator makes. The editor keeps it, so painting only redraws strokes.
+pub fn generate_base<'a>(
     settings: &TerrainSettings,
     find: impl Fn(&str) -> Option<&'a dyn TerrainGenerator>,
     base_dir: Option<&std::path::Path>,

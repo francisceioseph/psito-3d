@@ -49,6 +49,17 @@ impl Camera {
         (forward, right, up)
     }
 
+    /// The ray through a point of the image, as the renderer traces it:
+    /// `ndc` goes from -1 to 1 left to right and bottom to top, and `aspect`
+    /// is the image width over its height. Returns the eye and the unit
+    /// direction.
+    pub fn ray(&self, ndc: (f32, f32), aspect: f32) -> (Vec3, Vec3) {
+        let (forward, right, up) = self.basis();
+        let t = (self.fov.to_radians() * 0.5).tan();
+        let dir = forward + right * ndc.0 * t * aspect + up * ndc.1 * t;
+        (self.eye(), dir.normalize_or(forward))
+    }
+
     /// Turns around the target by the given degrees.
     pub fn orbit(&mut self, d_yaw: f32, d_pitch: f32) {
         self.yaw = (self.yaw + d_yaw).rem_euclid(360.0);
@@ -86,6 +97,15 @@ mod tests {
         }
         assert!(f.dot(r).abs() < 1e-5 && f.dot(u).abs() < 1e-5 && r.dot(u).abs() < 1e-5);
         assert!(u.y > 0.0, "up points up");
+    }
+
+    #[test]
+    fn the_middle_ray_looks_at_the_target() {
+        let c = Camera::default();
+        let (eye, dir) = c.ray((0.0, 0.0), 1.5);
+        assert!((eye + dir * c.distance - c.target).length() < 1e-3);
+        let (_, top) = c.ray((0.0, 1.0), 1.5);
+        assert!(top.y > dir.y, "the top of the image looks higher");
     }
 
     #[test]

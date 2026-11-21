@@ -8,10 +8,12 @@ use std::time::{Duration, Instant};
 use eframe::egui_wgpu::RenderState;
 use egui::{Key, KeyboardShortcut, Modifiers};
 use psito3d_render::Quality;
-use psito3d_scene::{Scene, SplitMix64, TerrainSettings, TerrainSource};
+use psito3d_scene::{BrushStroke, Scene, SceneError, SplitMix64, TerrainSettings, TerrainSource};
 use psito3d_terrain::{Heightfield, TerrainError};
 use psito3d_ui::I18n;
-use psito3d_ui::organisms::{GeneratorChoice, Status, TerrainAction, TerrainStatus, ToolbarAction};
+use psito3d_ui::organisms::{
+    GeneratorChoice, PaintEvent, SceneCodeDialog, Status, TerrainAction, TerrainStatus, ToolbarAction,
+};
 use psito3d_ui::theme;
 
 use crate::catalog::Catalog;
@@ -34,6 +36,8 @@ const DRAG_RESOLUTION: u32 = 192;
 const MESSAGE_TIME: Duration = Duration::from_secs(4);
 /// How long a message the person may need to act on stays.
 const LONG_MESSAGE_TIME: Duration = Duration::from_secs(12);
+/// How fast the camera turns by itself, in degrees per second.
+const ORBIT_SPEED: f32 = 8.0;
 /// How many of the wallpapers made are kept on disk.
 const WALLPAPERS_KEPT: usize = 3;
 
@@ -91,6 +95,10 @@ pub struct Psito3dApp {
     message: Option<(String, Instant, Duration)>,
     rng: SplitMix64,
     last_status: Status,
+    code_dialog: SceneCodeDialog,
+    orbiting: bool,
+    /// Whether the mouse is down on a stroke already started.
+    stroke_open: bool,
 }
 
 fn system_language() -> String {
@@ -144,6 +152,9 @@ impl Psito3dApp {
             message: None,
             rng: SplitMix64::new(seed),
             last_status: Status::default(),
+            code_dialog: SceneCodeDialog::default(),
+            orbiting: false,
+            stroke_open: false,
         };
         if app.gpu.is_none() {
             log::error!("eframe gave no wgpu device: the scene cannot be drawn");
@@ -237,6 +248,8 @@ impl Psito3dApp {
             ToolbarAction::Save => self.save(),
             ToolbarAction::Export => self.export(rs),
             ToolbarAction::Wallpaper => self.make_wallpaper(ctx, rs),
+            ToolbarAction::SceneCode => self.code_dialog.show_window(),
+            ToolbarAction::ToggleOrbit => self.orbiting = !self.orbiting,
             ToolbarAction::Theme(id) => self.set_theme(ctx, &id),
             ToolbarAction::Language(code) => self.set_language(&code),
         }
@@ -337,6 +350,64 @@ impl Psito3dApp {
         }
     }
 
+    /// Opens the world of a pasted scene code. The scene it replaces can be
+    /// brought back with undo.
+    fn open_code(&mut self, code: &str) {
+        match Scene::from_code(code) {
+            Ok(scene) => {
+                self.editor.scene = scene;
+                self.editor.file = None;
+                self.editor.selected = None;
+                self.code_dialog.open = false;
+            }
+            Err(SceneError::TooNew { .. }) => self.code_dialog.error = Some(self.i18n.tr("code-too-new")),
+            Err(_) => self.code_dialog.error = Some(self.i18n.tr("code-invalid")),
+        }
+    }
+
+    /// Adds the point under the brush to the stroke being painted, or starts
+    /// a stroke. Points closer than a fifth of the brush to the last one are
+    /// skipped, which keeps strokes small and the touches evenly spread.
+    fn paint(&mut self, event: PaintEvent) {
+        if event.started {
+            self.stroke_open = false;
+        }
+        let (Some(field), Some(tool)) = (&self.heightfield, self.editor.brush.tool) else { return };
+        let scene = &mut self.editor.scene;
+        let (origin, dir) = scene.camera.ray(event.ndc, event.aspect);
+        let terrain = &mut scene.terrain;
+        let Some(hit) =
+            psito3d_terrain::raycast(field, origin.to_array(), dir.to_array(), terrain.extent, terrain.height)
+        else {
+            return;
+        };
+        // Rounded to 5 cm: the stroke stays the same and the scene code shorter.
+        let point = [(hit[0] * 20.0).round() / 20.0, (hit[2] * 20.0).round() / 20.0];
+        let total: usize = terrain.strokes.iter().map(|s| s.points.len()).sum();
+        if total >= TerrainSettings::MAX_BRUSH_POINTS {
+            return;
+        }
+        let brush = self.editor.brush;
+        match terrain.strokes.last_mut() {
+            Some(stroke) if self.stroke_open => {
+                let last = stroke.points.last().copied().unwrap_or(point);
+                let far = ((point[0] - last[0]).powi(2) + (point[1] - last[1]).powi(2)).sqrt() >= brush.radius * 0.2;
+                if far {
+                    stroke.points.push(point);
+                }
+            }
+            _ => {
+                terrain.strokes.push(BrushStroke {
+                    tool,
+                    radius: brush.radius,
+                    strength: brush.strength,
+                    points: vec![point],
+                });
+                self.stroke_open = true;
+            }
+        }
+    }
+
     fn pick_picture(&mut self) {
         let Some(path) =
             rfd::FileDialog::new().add_filter("Image", &["png", "jpg", "jpeg", "bmp", "webp", "gif"]).pick_file()
@@ -402,6 +473,11 @@ impl Psito3dApp {
         &self.theme_id
     }
 
+    /// Whether there is anything to undo.
+    pub fn can_undo(&self) -> bool {
+        self.editor.can_undo()
+    }
+
     /// The language in use.
     pub fn language(&self) -> &str {
         self.i18n.lang()
@@ -426,8 +502,16 @@ impl eframe::App for Psito3dApp {
             theme: &self.theme_id,
             status: &status,
             texture: self.gpu.as_ref().map(GpuViewport::texture),
+            orbiting: self.orbiting,
         };
         let out = page.show(ui, &mut self.editor);
+        if self.code_dialog.open {
+            let code = self.editor.scene.to_code();
+            let uses_picture = matches!(self.editor.scene.terrain.source, TerrainSource::Image { .. });
+            if let Some(pasted) = self.code_dialog.show(&ctx, &self.i18n, &code, uses_picture) {
+                self.open_code(&pasted);
+            }
+        }
         if let Some(action) = out.toolbar {
             self.handle_toolbar(&ctx, rs, action);
         }
@@ -438,15 +522,34 @@ impl eframe::App for Psito3dApp {
         }
 
         let pointer_down = ctx.input(|i| i.pointer.any_down());
+        if let Some(event) = out.viewport.and_then(|v| v.paint) {
+            self.paint(event);
+        }
+        if !pointer_down {
+            self.stroke_open = false;
+        }
         let camera_moving = out.viewport.is_some_and(|v| v.interacting);
+        if self.orbiting {
+            if camera_moving {
+                // Taking the camera by hand stops the turning.
+                self.orbiting = false;
+            } else {
+                let dt = ctx.input(|i| i.stable_dt).min(0.1);
+                self.editor.scene.camera.orbit(ORBIT_SPEED * dt, 0.0);
+            }
+        }
         let changed = self.editor.scene != self.previous_scene;
+        // Painting changes only the strokes, which are quick to redraw at
+        // full detail; the generator's settings are what is slow.
+        let ground_changed =
+            self.editor.scene.terrain.without_strokes() != self.previous_scene.terrain.without_strokes();
         if changed || camera_moving {
             self.last_change = Instant::now();
             self.previous_scene = self.editor.scene.clone();
         }
         // Moving the camera is not an edit: it is not worth an undo step.
         self.editor.settle(pointer_down);
-        self.request_terrain(&ctx, pointer_down && changed);
+        self.request_terrain(&ctx, pointer_down && ground_changed);
 
         let mut busy = self.worker.is_busy();
         if let (Some(gpu), Some(rs), Some(v)) = (&mut self.gpu, rs, out.viewport) {
@@ -461,7 +564,7 @@ impl eframe::App for Psito3dApp {
                 self.finish_picture(outcome);
             }
         }
-        if busy || self.message.is_some() {
+        if busy || self.orbiting || self.message.is_some() {
             ctx.request_repaint();
         }
     }

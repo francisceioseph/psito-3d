@@ -18,6 +18,9 @@ pub enum SceneError {
     /// The file is not a scene.
     #[error("not a Psito 3D scene: {0}")]
     Parse(#[from] serde_json::Error),
+    /// A scene code that cannot be read; the text says why.
+    #[error("not a scene code: {0}")]
+    BadCode(&'static str),
     /// The file comes from a newer version of the program.
     #[error("the scene was saved by a newer Psito 3D (format {found}, this one reads up to {FORMAT_VERSION})")]
     TooNew {
@@ -119,6 +122,19 @@ impl Scene {
         self.objects.len() != before
     }
 
+    /// Whether the two scenes are the same world, whatever the camera. The
+    /// camera is where the person looks from, not part of what they made, so
+    /// moving it is not an edit to undo.
+    pub fn same_world(&self, other: &Scene) -> bool {
+        self.terrain == other.terrain
+            && self.sky == other.sky
+            && self.fog == other.fog
+            && self.sea == other.sea
+            && self.objects == other.objects
+            && self.filter == other.filter
+            && self.next_object_id == other.next_object_id
+    }
+
     /// The scene as pretty JSON, the `.psito3d` format.
     pub fn to_json(&self) -> String {
         serde_json::to_string_pretty(self).expect("a scene is always serialisable")
@@ -154,6 +170,7 @@ impl Scene {
         self.sea.ripple = unit(self.sea.ripple);
         self.sea.color = self.sea.color.map(unit);
         self.terrain.resolution = self.terrain.clamped_resolution();
+        self.terrain.sanitize_strokes();
         self.terrain.edge_falloff = self.terrain.edge_falloff.clamp(0.0, 0.5);
         self.camera.pitch = self.camera.pitch.clamp(Camera::PITCH_RANGE.0, Camera::PITCH_RANGE.1);
         self.camera.distance = self.camera.distance.clamp(Camera::DISTANCE_RANGE.0, Camera::DISTANCE_RANGE.1);

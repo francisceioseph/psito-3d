@@ -182,3 +182,94 @@ fn a_desktop_that_cannot_be_changed_gets_the_picture_path() {
     assert!(h.state().status_shown().message.as_deref().unwrap().contains(&path.display().to_string()));
     assert!(path.exists(), "the picture stays, so the person can set it by hand");
 }
+
+#[test]
+fn a_pasted_scene_code_opens_its_world() {
+    let mut run = start("en");
+    let h = &mut run.harness;
+    settle(h);
+    let mut other = psito3d_scene::Scene::default();
+    other.sky.haze = 0.77;
+    h.get_by_label("Scene code").click();
+    // A window's first frame only measures it; it shows on the next ones.
+    h.run_steps(4);
+    let field = h.get_by_role_and_label(egui::Role::MultilineTextInput, "Paste a code to open its world");
+    field.focus();
+    h.run_steps(1);
+    h.get_by_role_and_label(egui::Role::MultilineTextInput, "Paste a code to open its world")
+        .type_text("p3d1.nonsense");
+    h.run_steps(1);
+    h.get_by_label("Open").click();
+    h.run_steps(2);
+    h.get_by_label("This is not a Psito 3D scene code, or part of it is missing.");
+
+    // Closing and opening again starts with an empty field.
+    h.get_by_label("Close").click();
+    h.run_steps(2);
+    h.get_by_label("Scene code").click();
+    h.run_steps(4);
+    h.get_by_role_and_label(egui::Role::MultilineTextInput, "Paste a code to open its world").focus();
+    h.run_steps(1);
+    h.get_by_role_and_label(egui::Role::MultilineTextInput, "Paste a code to open its world")
+        .type_text(&other.to_code());
+    // The long code makes the window taller; let it settle before clicking.
+    h.run_steps(4);
+    h.get_by_label("Open").click();
+    h.run_steps(2);
+    assert_eq!(h.state().scene(), &other);
+    assert!(h.query_by_label("Paste a code to open its world").is_none(), "the window closed");
+}
+
+#[test]
+fn the_camera_turns_by_itself_without_filling_the_undo() {
+    let mut run = start("en");
+    let h = &mut run.harness;
+    settle(h);
+    assert!(!h.state().can_undo(), "nothing to undo in a scene just opened");
+    let yaw = h.state().scene().camera.yaw;
+    h.get_by_label("Turn around by itself").click();
+    h.run_steps(30);
+    assert_ne!(h.state().scene().camera.yaw, yaw);
+    assert!(!h.state().can_undo(), "turning is not an edit");
+    h.get_by_label("Turn around by itself").click();
+    h.run_steps(2);
+    let stopped = h.state().scene().camera.yaw;
+    h.run_steps(10);
+    assert_eq!(h.state().scene().camera.yaw, stopped);
+}
+
+#[test]
+fn painting_the_ground_is_one_undo_step() {
+    // Tall enough that the brushes, below the terrain, fit on screen.
+    let mut run = start_sized("en", egui::vec2(1280.0, 2600.0));
+    let h = &mut run.harness;
+    settle(h);
+    h.get_by_label("Raise").click();
+    h.run_steps(2);
+    let view = h.get_by_label("Rendered scene").rect();
+    // Just below the middle, where the island is.
+    let a = egui::pos2(view.center().x, view.center().y + view.height() * 0.08);
+    let press = |pos, pressed| egui::Event::PointerButton {
+        pos,
+        button: egui::PointerButton::Primary,
+        pressed,
+        modifiers: egui::Modifiers::NONE,
+    };
+    h.event(egui::Event::PointerMoved(a));
+    h.event(press(a, true));
+    h.run_steps(2);
+    let step = view.width() * 0.02;
+    for i in 1..=10 {
+        h.event(egui::Event::PointerMoved(a + egui::vec2(i as f32 * step, 0.0)));
+        h.run_steps(1);
+    }
+    h.event(press(a + egui::vec2(10.0 * step, 0.0), false));
+    h.run_steps(2);
+    let strokes = &h.state().scene().terrain.strokes;
+    assert_eq!(strokes.len(), 1, "one drag, one stroke");
+    assert!(strokes[0].points.len() > 1, "it followed the mouse: {:?}", strokes[0].points);
+    settle(h);
+    h.get_by_label("Undo").click();
+    h.run_steps(2);
+    assert!(h.state().scene().terrain.strokes.is_empty());
+}
