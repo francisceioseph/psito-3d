@@ -6,9 +6,10 @@ picture sharpen while you look at it. Terrains and themes can come from
 plugins, written in Lua.
 
 Psito 3D is a sibling of [Psito Plume](https://github.com/francisceioseph/psito-plume)
-and [Psito Player](https://github.com/francisceioseph/psito-player), and the 3D
-toy of [Psito OS](https://github.com/francisceioseph/psito-os). It is inspired by
-the landscape programs of the 90s, with its own interface.
+and [Psito Player](https://github.com/francisceioseph/psito-player): a program for
+everyone, on Linux, Windows and macOS, with no account, no ads and no
+telemetry. It is inspired by the landscape programs of the 90s, with its own
+interface.
 
 ## What it does today
 
